@@ -60,15 +60,22 @@ class ModbusApp(QWidget):
         self.client = None
         
         self.styleGeneral()
+        
+    def bolear(self,x):
+        if x == 'true' or x == 'True' or int(x) == 1:
+            return True
 
     #funcion para enviar mensaje al puerto serial
     def send_message(self):
         if self.client and self.client.is_socket_open():
             message = self.msgBox.text()
+            message = message.split()
+            message[1] = self.bolear(message[1])
             try:
-                result = self.client.write_coil(1, True, slave = 1)
+                result = self.client.write_coil(int(message[0]),message[1], slave = 1)
                 if result.isError():
-                    self.responseLabel.setText('Error al enviar el mensaje',result)
+                    self.responseLabel.setText('Error al enviar el mensaje')
+                    print(result)
                     self.responseLabel.setObjectName("errorReturnLabel")
                     self.styleGeneral()
                 else:
