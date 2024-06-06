@@ -2,7 +2,10 @@ import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton, QLabel
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from pymodbus.client import ModbusSerialClient as ModbusClient
+#from pymodbus.client import ModbusSerialClient as ModbusClient
+import pymodbus.client as ModbusClient
+from pymodbus import pymodbus_apply_logging_config
+import serial
 
 class ModbusApp(QWidget):
     def __init__(self):
@@ -63,13 +66,14 @@ class ModbusApp(QWidget):
         if self.client and self.client.is_socket_open():
             message = self.msgBox.text()
             try:
-                result = self.client.write_register(1, int(message))
+                result = self.client.write_coil(1, True, slave = 1)
                 if result.isError():
-                    self.responseLabel.setText('Error al enviar el mensaje')
+                    self.responseLabel.setText('Error al enviar el mensaje',result)
                     self.responseLabel.setObjectName("errorReturnLabel")
                     self.styleGeneral()
                 else:
                     self.responseLabel.setText('Mensaje enviado correctamente')
+                    print(result)
                     self.responseLabel.setObjectName("okReturnLabel")
                     self.styleGeneral()
             except Exception as e:
@@ -87,7 +91,7 @@ class ModbusApp(QWidget):
         port = self.portBox.text()
         baudrate = int(self.baudBox.text())
         
-        self.client = ModbusClient(method='rtu', port=port, baudrate=baudrate, timeout=1)
+        self.client = ModbusClient.ModbusSerialClient(method='rtu', port=port, baudrate=baudrate,bytesize= 8, parity= "N", stopbits=1,timeout=1)
         if self.client.connect():
             self.connectedLabel.setText(f'Conectado a {port} a {baudrate} baudios')
             self.connectedLabel.setObjectName("okReturnLabel")

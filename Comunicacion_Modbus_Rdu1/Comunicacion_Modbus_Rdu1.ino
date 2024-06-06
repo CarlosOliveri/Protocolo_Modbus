@@ -1,30 +1,54 @@
 #include <ModbusMaster.h>
 
-// Crear una instancia del objeto ModbusMaster
+// Instancia del objeto ModbusMaster
 ModbusMaster node;
 
+// Pin para controlar un LED (por ejemplo)
+const int ledPin = 13;
+
+void preTransmission() {
+  // Puedes usar esta función para habilitar la transmisión
+  // digitalWrite(SSerialTxControl, HIGH);
+}
+
+void postTransmission() {
+  // Puedes usar esta función para deshabilitar la transmisión
+  // digitalWrite(SSerialTxControl, LOW);
+}
+
 void setup() {
-  // Inicializar la comunicación serie a 9600 baudios
+  // Inicializar comunicación serial
   Serial.begin(9600);
 
-  // Inicializar el objeto ModbusMaster
-  node.begin(1, Serial);
+  // Inicializar el pin del LED como salida
+  pinMode(ledPin, OUTPUT);
+
+  // Comunicar el objeto ModbusMaster con el puerto serial
+  node.begin(1, Serial);  // El ID del esclavo es 1
+
+  // Configurar las funciones de pre y post transmisión
+  node.preTransmission(preTransmission);
+  node.postTransmission(postTransmission);
 }
 
 void loop() {
-  // Intentar leer desde la dirección 0x00 de los registros de entrada
   uint8_t result;
-  result = node.readInputRegisters(0x00, 1);
+  uint16_t data[2];
 
-  // Si la lectura fue exitosa, imprimir el valor leído
+  // Leer el valor del registro 0
+  result = node.readHoldingRegisters(0, 1);
   if (result == node.ku8MBSuccess) {
-    Serial.print("Lectura de registro: ");
-    Serial.println(node.getResponseBuffer(0x00));
-  } else {
-    Serial.print("Error de comunicación: ");
-    Serial.println(result, HEX);
+    uint16_t value = node.getResponseBuffer(0);
+    if (value == 1) {
+      digitalWrite(ledPin, HIGH);  // Encender LED
+    } else {
+      digitalWrite(ledPin, LOW);   // Apagar LED
+    }
+    node.setTransmitBuffer(0, 12345);  // Valor de confirmación
+    node.writeSingleRegister(1, 12345);
+    // Escribir una confirmación en el registro 1
   }
 
-  // Esperar 1 segundo antes de la siguiente lectura
-  delay(1000);
+  delay(1000);  // Esperar 1 segundo antes de la próxima iteración
 }
+
