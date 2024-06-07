@@ -8,6 +8,9 @@ Ref.: https://docs.arduino.cc/learn/communication/modbus/
 Ref.: https://www.arduino.cc/reference/en/libraries/arduinomodbus/
 */
 #include <ArduinoModbus.h>
+int coil0 = 12;
+int coil1 = 11;
+int coil2 = 10;
 void setup() {
  //Configuracion del Server=Esclavo
  ModbusRTUServer.begin(1,9600);
@@ -16,37 +19,39 @@ void setup() {
  //configuracion del holding register para el esclavo
  ModbusRTUServer.configureHoldingRegisters(0,1);
  //
- pinMode(13, OUTPUT);
- pinMode(12, OUTPUT);
- pinMode(11, OUTPUT);
+ pinMode(coil0, OUTPUT);
+ pinMode(coil1, OUTPUT);
+ pinMode(coil2, OUTPUT);
  //
- digitalWrite(13, LOW);
- digitalWrite(12, LOW);
- digitalWrite(11, LOW);
+ digitalWrite(coil0, LOW);
+ digitalWrite(coil1, LOW);
+ digitalWrite(coil2, LOW);
 
 }
 
 void loop() {
 // asignacion de valor del puerto analogico A0 al holding Register configurado
 int val = analogRead(A0);
+//Serial.println(val);
+val = map(val, 0, 1023, 0, 65535); // Escala a 16 bits
 ModbusRTUServer.holdingRegisterWrite(0, val);
 //Master pregunta 
 ModbusRTUServer.poll();
 //verificar el estado del Coil0
 if(ModbusRTUServer.coilRead(0))
-  digitalWrite(13, HIGH);
+  digitalWrite(coil0, HIGH);
 else
-  digitalWrite(13, LOW);
+  digitalWrite(coil0, LOW);
 //verificar el estado del Coil1
 if(ModbusRTUServer.coilRead(1))
-  digitalWrite(12, HIGH);
+  digitalWrite(coil1, HIGH);
 else
-  digitalWrite(12, LOW);
+  digitalWrite(coil1, LOW);
   //verificar el estado del Coil2
 if(ModbusRTUServer.coilRead(2))
-  digitalWrite(13, HIGH);
+  digitalWrite(coil2, HIGH);
 else
-  digitalWrite(13, LOW);
+  digitalWrite(coil2, LOW);
 
 
 }
